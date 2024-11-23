@@ -20,12 +20,12 @@ const App = () => {
     return defaultContacts;
   });
 
-  const addContact = (name, phone) => {
+  const addContact = (name, number) => {
     setContacts((prevContacts) => {
       const contact = {
         id: nanoid(),
         name,
-        number: phone,
+        number,
       };
       return [...prevContacts, contact];
     });
