@@ -1,65 +1,58 @@
 import "modern-normalize/modern-normalize.css";
 import { useEffect, useState } from "react";
+import { nanoid } from "nanoid";
 import "./App.css";
-import Description from "./components/Description/Description";
-import Options from "./components/Options/Options";
-import Feedback from "./components/Feedback/Feedback";
-import Notification from "./components/Notification/Notification";
+import ContactForm from "./components/ContactForm/ContactForm";
+import SearchBox from "./components/SearchBox/SearchBox";
+import ContactList from "./components/ContactList/ContactList";
+import defaultContacts from "./data/defaultContacts.json";
 
-const STATE_KEY = "state";
+const CONTACTS_KEY = "contacts";
 
 const App = () => {
-  const [state, setState] = useState(() => {
-    const savedState = window.localStorage.getItem(STATE_KEY);
-    if (savedState) {
-      return JSON.parse(savedState);
+  const [filter, setFilter] = useState("");
+
+  const [contacts, setContacts] = useState(() => {
+    const savedContacts = window.localStorage.getItem(CONTACTS_KEY);
+    if (savedContacts) {
+      return JSON.parse(savedContacts);
     }
-    return {
-      good: 0,
-      neutral: 0,
-      bad: 0,
-    };
+    return defaultContacts;
   });
 
-  const updateFeedback = (feedbackType) => {
-    setState({
-      ...state,
-      [feedbackType]: state[feedbackType] + 1,
+  const addContact = (name, phone) => {
+    setContacts((prevContacts) => {
+      const contact = {
+        id: nanoid(),
+        name,
+        number: phone,
+      };
+      return [...prevContacts, contact];
     });
   };
 
-  const resetFeedback = () => {
-    setState({
-      good: 0,
-      neutral: 0,
-      bad: 0,
-    });
+  const deleteContact = (id) => {
+    setContacts((prevContacts) =>
+      prevContacts.filter((contact) => contact.id !== id)
+    );
   };
 
   useEffect(() => {
-    window.localStorage.setItem(STATE_KEY, JSON.stringify(state));
-  }, [state]);
+    window.localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts));
+  }, [contacts]);
 
-  const totalFeedback = state.good + state.neutral + state.bad;
-  const positiveFeedback = Math.round((state.good / totalFeedback) * 100);
+  const visibleContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
   return (
     <>
-      <Description />
-      <Options
-        updateFeedback={updateFeedback}
-        totalFeedback={totalFeedback}
-        resetFeedback={resetFeedback}
-      />
-      {totalFeedback > 0 ? (
-        <Feedback
-          state={state}
-          totalFeedback={totalFeedback}
-          positiveFeedback={positiveFeedback}
-        />
-      ) : (
-        <Notification />
-      )}
+      <div>
+        <h1>Phonebook</h1>
+        <ContactForm addContact={addContact} />
+        <SearchBox filter={filter} setFilter={setFilter} />
+        <ContactList contacts={visibleContacts} deleteContact={deleteContact} />
+      </div>
     </>
   );
 };
